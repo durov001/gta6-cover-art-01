@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Velvet Heat Cover Studio — GTA 6-style cover art maker</title>
+<meta name="description" content="Turn any photo and caption into GTA 6-style cover art. Offline, private, exported as PNG.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">VH</span>
+      <div>
+        <h1>Velvet Heat <span>Cover Studio</span></h1>
+        <p class="brand-sub">GTA 6-style cover art, made on your own machine</p>
+      </div>
+    </div>
+    <nav class="steps" aria-label="Steps">
+      <span class="step"><b>1</b> Add photos</span>
+      <span class="step-arrow">→</span>
+      <span class="step"><b>2</b> Caption</span>
+      <span class="step-arrow">→</span>
+      <span class="step"><b>3</b> Export PNG</span>
+    </nav>
+    <div class="top-actions">
+      <span class="privacy-badge">🔒 Photos never leave this device</span>
+      <button id="undoBtn" type="button" title="Undo (Ctrl+Z)">↩ Undo</button>
+      <button id="redoBtn" type="button" title="Redo (Ctrl+Y)">↪ Redo</button>
+    </div>
+  </header>
+
+  <main class="columns">
+    <!-- LEFT: photos, layouts, grades -->
+    <section class="panel panel-left" aria-label="Photos and style">
+      <h2>Photos</h2>
+      <div id="photoSlots" class="slots"></div>
+      <div class="btn-row">
+        <label class="btn btn-primary" for="photoInput">Choose photos</label>
+        <input id="photoInput" type="file" accept="image/*" multiple hidden>
+        <button id="demoBtn" type="button" class="btn">★ Try demo cast</button>
+      </div>
+      <p class="hint">Or drop / paste images anywhere in this window.</p>
+      <div class="btn-row">
+        <button id="buildBtn" type="button" class="btn btn-accent">Build my cover</button>
+        <button id="shuffleBtn" type="button" class="btn">🔀 Shuffle</button>
+      </div>
+      <p class="hint">Build my cover fills the poster from your first photo — hero plus detail crops.</p>
+
+      <h2>Layout</h2>
+      <div id="layoutPicker" class="picker"></div>
+
+      <h2>Colour grade</h2>
+      <div id="gradePicker" class="picker"></div>
+    </section>
+
+    <!-- CENTRE: live preview + crop -->
+    <section class="panel panel-centre" aria-label="Live preview">
+      <div class="preview-wrap">
+        <canvas id="previewCanvas" width="960" height="540"></canvas>
+      </div>
+      <div class="cropbar">
+        <span id="cropLabel" class="crop-label">Panel 2 — THE BOSS</span>
+        <label class="crop-zoom">Zoom
+          <input id="zoomSlider" type="range" min="1" max="4" step="0.05" value="1">
+          <span id="zoomVal">100%</span>
+        </label>
+        <button id="flipBtn" type="button" class="btn btn-small">⇋ Flip</button>
+        <button id="resetCropBtn" type="button" class="btn btn-small">Reset crop</button>
+      </div>
+      <p class="hint">Click a panel to select it. Drag inside to pan, scroll to zoom.</p>
+    </section>
+
+    <!-- RIGHT: caption, effects, export -->
+    <section class="panel panel-right" aria-label="Caption and export">
+      <h2>Caption</h2>
+      <label class="field">Title
+        <input id="titleInput" type="text" maxlength="24" value="VELVET HEAT">
+      </label>
+      <label class="field">Script subtitle
+        <input id="scriptInput" type="text" maxlength="40" value="Chasing the Last Light">
+      </label>
+      <label class="field">Tagline ribbon
+        <input id="taglineInput" type="text" maxlength="60" value="SEVEN FACES · ONE SUNSET · NO WAY HOME">
+      </label>
+      <label class="field">Review quote
+        <input id="reviewInput" type="text" maxlength="60" value="THE COAST HAS NEVER LOOKED THIS GOOD">
+      </label>
+      <label class="field">Review source
+        <input id="reviewSourceInput" type="text" maxlength="40" value="THE PALM COURT POST">
+      </label>
+      <label class="field">Billing block
+        <textarea id="billingInput" rows="3">VELVET HEAT PICTURES PRESENTS  ·  STARRING YOU  ·  WITH THE WHOLE CREW
+SHOT ON YOUR OWN CAMERA  ·  GRADED BY HAND  ·  NO PHOTO EVER LEAVES YOUR DEVICE
+COMING SOON</textarea>
+      </label>
+      <div class="field-row">
+        <label class="field">Seal
+          <input id="sealInput" type="text" maxlength="24" value="SUNSET APPROVED">
+        </label>
+        <label class="field">Seal ring
+          <input id="sealRingInput" type="text" maxlength="48" value="VELVET HEAT · ORIGINAL COVER ART · ">
+        </label>
+      </div>
+      <div class="field-row">
+        <label class="field">Edition tag
+          <input id="editionInput" type="text" maxlength="16" value="VOL. 01">
+        </label>
+        <label class="field">Release
+          <input id="releaseInput" type="text" maxlength="16" value="SUMMER 2027">
+        </label>
+      </div>
+
+      <h2>Panel name tags</h2>
+      <label class="check"><input id="autoTagsCheck" type="checkbox" checked> Auto from photos</label>
+      <div id="tagInputs" class="tag-inputs"></div>
+
+      <h2>Effects</h2>
+      <label class="slider-row">Film grain
+        <input id="grainSlider" type="range" min="0" max="100" value="25">
+        <span id="grainSliderVal">25</span>
+      </label>
+      <label class="slider-row">Halftone dots
+        <input id="halftoneSlider" type="range" min="0" max="100" value="0">
+        <span id="halftoneSliderVal">0</span>
+      </label>
+      <label class="slider-row">Light leaks
+        <input id="leaksSlider" type="range" min="0" max="100" value="30">
+        <span id="leaksSliderVal">30</span>
+      </label>
+      <label class="slider-row">Vignette
+        <input id="vignetteSlider" type="range" min="0" max="100" value="35">
+        <span id="vignetteSliderVal">35</span>
+      </label>
+      <div class="check-row">
+        <label class="check"><input id="reviewToggle" type="checkbox" checked> Review strip</label>
+        <label class="check"><input id="sealToggle" type="checkbox" checked> Gold seal</label>
+        <label class="check"><input id="billingToggle" type="checkbox" checked> Billing block</label>
+      </div>
+
+      <h2>Export</h2>
+      <button id="exportAllBtn" type="button" class="btn btn-primary btn-wide">Export all 3 PNGs</button>
+      <div class="btn-row">
+        <button type="button" class="btn export-one" data-size="square">1:1 · 1080²</button>
+        <button type="button" class="btn export-one" data-size="portrait">4:5 · 1080×1350</button>
+        <button type="button" class="btn export-one" data-size="wide">16:9 · 1920×1080</button>
+      </div>
+      <p class="hint">Every size is a fresh composition of your poster — never a crop.</p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Velvet Heat Cover Studio — an original fan-made poster tool. Not affiliated with Rockstar Games.</span>
+    <span>Works fully offline. Your photos stay on your device.</span>
+  </footer>
+</div>
+<script type="module" src="src/main.js"></script>
+<script type="module" src="src/shots.js"></script>
+</body>
+</html>
